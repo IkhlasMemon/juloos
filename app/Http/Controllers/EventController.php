@@ -136,7 +136,7 @@ class EventController extends Controller
         $pdf = Pdf::loadView('pdf.volunteer-badge', ['event' => $event, 'volunteer' => $registered])
             ->setPaper([0, 0, 560, 340]);
 
-        return $pdf->download("badge-{$event->id}-{$volunteer->id}.pdf");
+        return $pdf->stream("badge-{$event->id}-{$volunteer->id}.pdf");
     }
 
     public function badges(Event $event): HttpResponse
@@ -151,7 +151,7 @@ class EventController extends Controller
         $pdf = Pdf::loadView('pdf.volunteer-badges-bulk', ['event' => $event, 'volunteers' => $event->volunteers])
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download("badges-{$event->id}.pdf");
+        return $pdf->stream("badges-{$event->id}.pdf");
     }
 
     private function lookupOptions(): array

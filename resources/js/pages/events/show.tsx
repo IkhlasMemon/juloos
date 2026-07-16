@@ -17,7 +17,7 @@ import {
     type VolunteerType,
 } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { IdCard, LoaderCircle, Plus, Printer, UserX } from 'lucide-react';
+import { Eye, IdCard, LoaderCircle, Plus, UserX } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -105,9 +105,9 @@ export default function EventShow({
                     <div className="flex items-center gap-2">
                         {event.volunteers && event.volunteers.length > 0 && (
                             <Button size="sm" variant="outline" asChild>
-                                <a href={route('events.badges', event.id)}>
-                                    <Printer className="h-4 w-4" />
-                                    Print All Badges
+                                <a href={route('events.badges', event.id)} target="_blank" rel="noopener noreferrer">
+                                    <Eye className="h-4 w-4" />
+                                    View All Badges
                                 </a>
                             </Button>
                         )}
@@ -358,7 +358,7 @@ function RosterRow({
             </TableCell>
             <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
-                    <a href={route('events.badge', [eventId, volunteer.id])}>
+                    <a href={route('events.badge', [eventId, volunteer.id])} target="_blank" rel="noopener noreferrer">
                         <IdCard className="h-4 w-4" />
                     </a>
                 </Button>
