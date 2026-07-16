@@ -106,6 +106,6 @@
 
     <div
         style="position: absolute; left: {{ 220 * $scale }}pt; top: {{ 265 * $scale }}pt; width: {{ 225 * $scale }}pt; border-bottom: {{ 0.75 * $scale }}pt solid #9ca3af; padding-bottom: {{ 3 * $scale }}pt; font-size: {{ 18 * $scale }}pt; color: #1f2937;">
-        <span style="font-weight: bold;">EXPIRY DATE:</span> {{ $enddate }}
+        <span style="font-weight: bold;">VALID FOR:</span> {{ $enddate }}
     </div>
 </div>
