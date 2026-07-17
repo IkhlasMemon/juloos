@@ -15,8 +15,15 @@ use Inertia\Response;
 
 class VolunteerController extends Controller
 {
+    private const SORTABLE_COLUMNS = ['name', 'phone', 'cnic', 'events_count', 'status'];
+
     public function index(Request $request): Response
     {
+        $sort = in_array($request->string('sort')->toString(), self::SORTABLE_COLUMNS, true)
+            ? $request->string('sort')->toString()
+            : 'name';
+        $direction = $request->string('direction')->toString() === 'desc' ? 'desc' : 'asc';
+
         $volunteers = Volunteer::query()
             ->withCount('events')
             ->when($request->string('search')->toString(), function ($query, $search) {
@@ -29,13 +36,15 @@ class VolunteerController extends Controller
             })
             ->when($request->string('status')->toString(), fn ($query, $status) => $query->where('status', $status)
             )
-            ->orderBy('name')
+            ->orderBy($sort, $direction)
             ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('volunteers/index', [
             'volunteers' => $volunteers,
             'filters' => $request->only('search', 'status'),
+            'sort' => $sort,
+            'direction' => $direction,
         ]);
     }
 

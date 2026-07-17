@@ -62,7 +62,7 @@ export default function VolunteerCreate() {
                             <InputError message={errors.phone} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="cnic">CNIC</Label>
+                            <Label htmlFor="cnic">CNIC (optional)</Label>
                             <Input
                                 id="cnic"
                                 placeholder="99999-9999999-9"

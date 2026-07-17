@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EventBulkRegistrationRequest;
 use App\Http\Requests\EventRegistrationRequest;
 use App\Http\Requests\EventRegistrationUpdateRequest;
 use App\Http\Requests\EventRequest;
@@ -13,6 +14,7 @@ use App\Models\Volunteer;
 use App\Models\VolunteerType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -102,14 +104,66 @@ class EventController extends Controller
 
     public function register(EventRegistrationRequest $request, Event $event): RedirectResponse
     {
-        $event->volunteers()->attach($request->validated('volunteer_id'), [
-            'registered_at' => now(),
-            'squad_id' => $request->validated('squad_id'),
-            'masjid_id' => $request->validated('masjid_id'),
-            'volunteer_type_id' => $request->validated('volunteer_type_id'),
-        ]);
+        try {
+            $event->volunteers()->attach($request->validated('volunteer_id'), [
+                'registered_at' => now(),
+                'squad_id' => $request->validated('squad_id'),
+                'masjid_id' => $request->validated('masjid_id'),
+                'volunteer_type_id' => $request->validated('volunteer_type_id'),
+            ]);
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return back()->with('error', 'This volunteer is already registered for this event.');
+            }
+
+            throw $e;
+        }
 
         return back()->with('success', 'Volunteer registered.');
+    }
+
+    public function bulkRegister(EventBulkRegistrationRequest $request, Event $event): RedirectResponse
+    {
+        $volunteerIds = $request->validated('volunteer_ids');
+        $registeredIds = $event->volunteers()->whereIn('volunteers.id', $volunteerIds)->pluck('volunteers.id')->all();
+
+        $registered = 0;
+        $skipped = 0;
+
+        foreach ($volunteerIds as $volunteerId) {
+            if (in_array($volunteerId, $registeredIds, true)) {
+                $skipped++;
+
+                continue;
+            }
+
+            try {
+                $event->volunteers()->attach($volunteerId, [
+                    'registered_at' => now(),
+                    'squad_id' => $request->validated('squad_id'),
+                    'masjid_id' => $request->validated('masjid_id'),
+                    'volunteer_type_id' => $request->validated('volunteer_type_id'),
+                ]);
+                $registered++;
+                $registeredIds[] = $volunteerId;
+            } catch (QueryException $e) {
+                if ($e->getCode() === '23000') {
+                    $skipped++;
+
+                    continue;
+                }
+
+                throw $e;
+            }
+        }
+
+        $message = "{$registered} volunteer(s) registered.";
+
+        if ($skipped > 0) {
+            $message .= " {$skipped} skipped (already registered).";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function updateRegistration(EventRegistrationUpdateRequest $request, Event $event, Volunteer $volunteer): RedirectResponse
@@ -139,10 +193,16 @@ class EventController extends Controller
         return $pdf->stream("badge-{$event->id}-{$volunteer->id}.pdf");
     }
 
-    public function badges(Event $event): HttpResponse
+    public function badges(Request $request, Event $event): HttpResponse
     {
-        $event->load(['purpose:id,name', 'volunteers' => function ($query) {
+        $volunteerIds = array_filter(array_map('intval', $request->input('volunteer_ids', [])));
+
+        $event->load(['purpose:id,name', 'volunteers' => function ($query) use ($volunteerIds) {
             $query->orderBy('name');
+
+            if (! empty($volunteerIds)) {
+                $query->whereIn('volunteers.id', $volunteerIds);
+            }
         }]);
 
         (new Collection($event->volunteers->pluck('pivot')))

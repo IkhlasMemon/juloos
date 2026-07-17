@@ -61,6 +61,10 @@ class PurposeController extends Controller
 
     public function destroy(Purpose $purpose): RedirectResponse
     {
+        if ($purpose->events()->exists()) {
+            return back()->with('error', 'This purpose has events attached and cannot be deleted. Deactivate it instead.');
+        }
+
         $purpose->delete();
 
         return to_route('purposes.index')->with('success', 'Purpose deleted.');

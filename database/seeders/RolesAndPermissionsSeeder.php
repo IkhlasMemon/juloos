@@ -22,6 +22,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage users',
             'manage roles',
             'view activity logs',
+            'manage reports',
+            'view reports',
+            'export reports',
+            'import volunteers',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,6 +43,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage purposes',
             'manage lookups',
             'view activity logs',
+            'view reports',
+            'export reports',
         ]);
 
         $staff = Role::firstOrCreate(['name' => 'Staff', 'guard_name' => 'web']);

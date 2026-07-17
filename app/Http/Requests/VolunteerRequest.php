@@ -25,7 +25,7 @@ class VolunteerRequest extends FormRequest
                 Rule::unique('volunteers', 'phone')->ignore($volunteer?->id),
             ],
             'cnic' => [
-                'required',
+                'nullable',
                 'regex:/^\d{5}-\d{7}-\d{1}$/',
                 Rule::unique('volunteers', 'cnic')->ignore($volunteer?->id),
             ],

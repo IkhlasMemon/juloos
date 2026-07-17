@@ -91,7 +91,7 @@
 
     <div
         style="position: absolute; left: {{ 18 * $scale }}pt; top: {{ 190 * $scale }}pt; width: {{ 320 * $scale }}pt; border-bottom: {{ 0.75 * $scale }}pt solid #9ca3af; padding-bottom: {{ 3 * $scale }}pt; font-size: {{ 18 * $scale }}pt; color: #1f2937;">
-        <span style="font-weight: bold;">CNIC #:</span> {{ $volunteer->cnic }}
+        <span style="font-weight: bold;">CNIC #:</span> {{ $volunteer->cnic ?? '—' }}
     </div>
 
     <div

@@ -141,7 +141,7 @@
                         </td>
                         <td>
                             <span class="label">CNIC</span>
-                            <span class="value">{{ $volunteer->cnic }}</span>
+                            <span class="value">{{ $volunteer->cnic ?? '—' }}</span>
                         </td>
                     </tr>
                     <tr>

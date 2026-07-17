@@ -16,6 +16,16 @@ class EventVolunteer extends Pivot
         ];
     }
 
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    public function volunteer(): BelongsTo
+    {
+        return $this->belongsTo(Volunteer::class);
+    }
+
     public function squad(): BelongsTo
     {
         return $this->belongsTo(Squad::class);

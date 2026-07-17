@@ -8,12 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { storageUrl } from '@/lib/storage-url';
-import { type BreadcrumbItem, type Paginated, type Volunteer } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Eye, IdCard, Pencil, Plus, Search } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { type BreadcrumbItem, type Paginated, type SharedData, type Volunteer } from '@/types';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, IdCard, Pencil, Plus, Search, Upload } from 'lucide-react';
+import { FormEventHandler, useEffect, useRef } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Volunteers', href: route('volunteers.index') }];
+
+const sortableColumns = [
+    { key: 'name', label: 'Volunteer' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'cnic', label: 'CNIC' },
+    { key: 'events_count', label: 'Events' },
+    { key: 'status', label: 'Status' },
+] as const;
 
 function initials(name: string): string {
     return name
@@ -28,23 +36,64 @@ function initials(name: string): string {
 export default function VolunteersIndex({
     volunteers,
     filters,
+    sort,
+    direction,
 }: {
     volunteers: Paginated<Volunteer>;
     filters: { search?: string; status?: string };
+    sort: string;
+    direction: 'asc' | 'desc';
 }) {
+    const { auth } = usePage<SharedData>().props;
+    const canImport = (auth.permissions ?? []).includes('import volunteers');
+
     const { data, setData } = useForm({ search: filters.search ?? '', status: filters.status ?? 'all' });
 
     const applyFilters = (overrides: Partial<typeof data> = {}) => {
         const next = { ...data, ...overrides };
         router.get(
             route('volunteers.index'),
-            { search: next.search || undefined, status: next.status !== 'all' ? next.status : undefined },
+            {
+                search: next.search || undefined,
+                status: next.status !== 'all' ? next.status : undefined,
+                sort,
+                direction,
+            },
             { preserveState: true, replace: true },
         );
     };
 
+    const toggleSort = (column: string) => {
+        router.get(
+            route('volunteers.index'),
+            {
+                search: data.search || undefined,
+                status: data.status !== 'all' ? data.status : undefined,
+                sort: column,
+                direction: sort === column && direction === 'asc' ? 'desc' : 'asc',
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const isFirstRender = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
+        searchTimeout.current = setTimeout(() => applyFilters(), 400);
+
+        return () => clearTimeout(searchTimeout.current);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.search]);
+
     const search: FormEventHandler = (e) => {
         e.preventDefault();
+        clearTimeout(searchTimeout.current);
         applyFilters();
     };
 
@@ -57,12 +106,22 @@ export default function VolunteersIndex({
                         <h1 className="text-2xl font-semibold">Volunteers</h1>
                         <p className="text-sm text-muted-foreground">Track and manage your volunteer roster.</p>
                     </div>
-                    <Button asChild>
-                        <Link href={route('volunteers.create')}>
-                            <Plus className="h-4 w-4" />
-                            New Volunteer
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {canImport && (
+                            <Button variant="outline" asChild>
+                                <Link href={route('volunteers.import')}>
+                                    <Upload className="h-4 w-4" />
+                                    Import
+                                </Link>
+                            </Button>
+                        )}
+                        <Button asChild>
+                            <Link href={route('volunteers.create')}>
+                                <Plus className="h-4 w-4" />
+                                New Volunteer
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -100,11 +159,26 @@ export default function VolunteersIndex({
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Volunteer</TableHead>
-                                <TableHead>Phone</TableHead>
-                                <TableHead>CNIC</TableHead>
-                                <TableHead>Events</TableHead>
-                                <TableHead>Status</TableHead>
+                                {sortableColumns.map((column) => (
+                                    <TableHead key={column.key}>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleSort(column.key)}
+                                            className="flex items-center gap-1 hover:text-foreground"
+                                        >
+                                            {column.label}
+                                            {sort === column.key ? (
+                                                direction === 'asc' ? (
+                                                    <ArrowUp className="h-3.5 w-3.5" />
+                                                ) : (
+                                                    <ArrowDown className="h-3.5 w-3.5" />
+                                                )
+                                            ) : (
+                                                <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
+                                            )}
+                                        </button>
+                                    </TableHead>
+                                ))}
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -131,7 +205,7 @@ export default function VolunteersIndex({
                                         </div>
                                     </TableCell>
                                     <TableCell>{volunteer.phone}</TableCell>
-                                    <TableCell>{volunteer.cnic}</TableCell>
+                                    <TableCell>{volunteer.cnic ?? '—'}</TableCell>
                                     <TableCell>{volunteer.events_count}</TableCell>
                                     <TableCell>
                                         <Badge variant={volunteer.status === 'active' ? 'default' : 'secondary'}>{volunteer.status}</Badge>

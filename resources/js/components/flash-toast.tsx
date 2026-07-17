@@ -32,9 +32,18 @@ export function FlashToast() {
             toast.error('Unable to reach the server. Please check your connection and try again.');
         });
 
+        const removeErrorListener = router.on('error', (event) => {
+            const firstError = Object.values(event.detail.errors)[0];
+
+            if (firstError) {
+                toast.error(firstError);
+            }
+        });
+
         return () => {
             removeInvalidListener();
             removeExceptionListener();
+            removeErrorListener();
         };
     }, []);
 

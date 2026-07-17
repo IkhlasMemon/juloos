@@ -8,6 +8,7 @@ import {
     Building2,
     CalendarDays,
     ClipboardList,
+    FileBarChart,
     LayoutGrid,
     Shield,
     ShieldCheck,
@@ -42,6 +43,12 @@ const platformNavItems: NavItem[] = [
         url: route('purposes.index'),
         icon: Target,
         permission: 'manage purposes',
+    },
+    {
+        title: 'Reports',
+        url: route('reports.index'),
+        icon: FileBarChart,
+        permission: 'view reports',
     },
 ];
 

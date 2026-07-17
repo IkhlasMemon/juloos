@@ -75,7 +75,7 @@ export default function VolunteerCard({
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">CNIC</p>
-                                <p className="font-medium">{volunteer.cnic}</p>
+                                <p className="font-medium">{volunteer.cnic ?? '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground">Events Attended</p>

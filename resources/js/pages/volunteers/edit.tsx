@@ -32,7 +32,7 @@ export default function VolunteerEdit({ volunteer }: { volunteer: Volunteer }) {
         name: volunteer.name,
         father_name: volunteer.father_name,
         phone: volunteer.phone,
-        cnic: volunteer.cnic,
+        cnic: volunteer.cnic ?? '',
         photo: null as File | null,
         status: volunteer.status,
         joined_date: volunteer.joined_date,
@@ -92,7 +92,7 @@ export default function VolunteerEdit({ volunteer }: { volunteer: Volunteer }) {
                             <InputError message={errors.phone} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="cnic">CNIC</Label>
+                            <Label htmlFor="cnic">CNIC (optional)</Label>
                             <Input
                                 id="cnic"
                                 placeholder="99999-9999999-9"
