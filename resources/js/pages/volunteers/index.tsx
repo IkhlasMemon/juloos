@@ -179,13 +179,14 @@ export default function VolunteersIndex({
                                         </button>
                                     </TableHead>
                                 ))}
+                                <TableHead>Area</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {volunteers.data.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                                         No volunteers found.
                                     </TableCell>
                                 </TableRow>
@@ -210,6 +211,7 @@ export default function VolunteersIndex({
                                     <TableCell>
                                         <Badge variant={volunteer.status === 'active' ? 'default' : 'secondary'}>{volunteer.status}</Badge>
                                     </TableCell>
+                                    <TableCell>{volunteer.area?.name ?? '—'}</TableCell>
                                     <TableCell className="flex justify-end gap-1">
                                         <Button variant="ghost" size="icon" asChild>
                                             <Link href={route('volunteers.show', volunteer.id)}>

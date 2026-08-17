@@ -103,6 +103,15 @@ export interface VolunteerType {
     updated_at: string;
 }
 
+export interface Area {
+    id: number;
+    name: string;
+    is_active: boolean;
+    volunteers_count?: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface EventModel {
     id: number;
     purpose_id: number;
@@ -149,6 +158,8 @@ export interface Volunteer {
     father_name: string;
     phone: string;
     cnic: string | null;
+    area_id: number | null;
+    area?: Area | null;
     photo_path: string | null;
     status: VolunteerStatus;
     joined_date: string;

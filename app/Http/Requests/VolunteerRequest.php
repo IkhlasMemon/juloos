@@ -29,6 +29,7 @@ class VolunteerRequest extends FormRequest
                 'regex:/^\d{5}-\d{7}-\d{1}$/',
                 Rule::unique('volunteers', 'cnic')->ignore($volunteer?->id),
             ],
+            'area_id' => ['nullable', 'exists:areas,id'],
             'photo' => ['nullable', 'image', 'max:2048'],
             'status' => ['required', 'in:active,inactive'],
             'joined_date' => ['required', 'date'],

@@ -10,6 +10,7 @@ import {
     ClipboardList,
     FileBarChart,
     LayoutGrid,
+    MapPin,
     Shield,
     ShieldCheck,
     Tags,
@@ -69,6 +70,12 @@ const adminNavItems: NavItem[] = [
         title: 'Volunteer Types',
         url: route('volunteer-types.index'),
         icon: Tags,
+        permission: 'manage lookups',
+    },
+    {
+        title: 'Areas',
+        url: route('areas.index'),
+        icon: MapPin,
         permission: 'manage lookups',
     },
     {

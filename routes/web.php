@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\MasjidController;
@@ -56,6 +57,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::resource('volunteer-types', VolunteerTypeController::class)->except('show');
         Route::patch('volunteer-types/{volunteer_type}/toggle', [VolunteerTypeController::class, 'toggle'])->name('volunteer-types.toggle');
+
+        Route::resource('areas', AreaController::class)->except('show');
+        Route::patch('areas/{area}/toggle', [AreaController::class, 'toggle'])->name('areas.toggle');
     });
 
     Route::middleware('permission:manage users')->group(function () {

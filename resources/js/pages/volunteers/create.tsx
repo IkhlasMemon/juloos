@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { formatCnic, formatPhone } from '@/lib/format';
-import { type BreadcrumbItem } from '@/types';
+import { type Area, type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
@@ -15,16 +15,22 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'New Volunteer', href: route('volunteers.create') },
 ];
 
-export default function VolunteerCreate() {
-    const { data, setData, post, processing, errors } = useForm({
+export default function VolunteerCreate({ areas }: { areas: Area[] }) {
+    const { data, setData, post, processing, errors, transform } = useForm({
         name: '',
         father_name: '',
         phone: '',
         cnic: '',
+        area_id: 'none',
         photo: null as File | null,
         status: 'active',
         joined_date: new Date().toISOString().slice(0, 10),
     });
+
+    transform((data) => ({
+        ...data,
+        area_id: data.area_id !== 'none' ? data.area_id : null,
+    }));
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -71,6 +77,24 @@ export default function VolunteerCreate() {
                             />
                             <InputError message={errors.cnic} />
                         </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="area_id">Area</Label>
+                        <Select value={data.area_id} onValueChange={(value) => setData('area_id', value)}>
+                            <SelectTrigger id="area_id">
+                                <SelectValue placeholder="Select area" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No area</SelectItem>
+                                {areas.map((area) => (
+                                    <SelectItem key={area.id} value={String(area.id)}>
+                                        {area.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.area_id} />
                     </div>
 
                     <div className="grid gap-2">

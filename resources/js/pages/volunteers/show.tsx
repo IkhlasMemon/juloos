@@ -80,6 +80,10 @@ export default function VolunteerShow({
                         <p className="font-medium">{volunteer.cnic ?? '—'}</p>
                     </div>
                     <div>
+                        <p className="text-xs text-muted-foreground">Area</p>
+                        <p className="font-medium">{volunteer.area?.name ?? '—'}</p>
+                    </div>
+                    <div>
                         <p className="text-xs text-muted-foreground">Entry Date</p>
                         <p className="font-medium">{new Date(volunteer.joined_date).toLocaleDateString()}</p>
                     </div>

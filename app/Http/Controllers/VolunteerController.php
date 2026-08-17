@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\VolunteerRequest;
+use App\Models\Area;
 use App\Models\Volunteer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,7 @@ class VolunteerController extends Controller
         $direction = $request->string('direction')->toString() === 'desc' ? 'desc' : 'asc';
 
         $volunteers = Volunteer::query()
+            ->with('area:id,name')
             ->withCount('events')
             ->when($request->string('search')->toString(), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -50,7 +52,9 @@ class VolunteerController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('volunteers/create');
+        return Inertia::render('volunteers/create', [
+            'areas' => Area::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function store(VolunteerRequest $request): RedirectResponse
@@ -68,7 +72,7 @@ class VolunteerController extends Controller
 
     public function show(Volunteer $volunteer): Response
     {
-        $volunteer->load(['events' => function ($query) {
+        $volunteer->load(['area:id,name', 'events' => function ($query) {
             $query->with('purpose:id,name')->orderByDesc('start_date');
         }]);
 
@@ -84,6 +88,7 @@ class VolunteerController extends Controller
     {
         return Inertia::render('volunteers/edit', [
             'volunteer' => $volunteer,
+            'areas' => Area::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
