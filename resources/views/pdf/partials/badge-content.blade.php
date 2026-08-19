@@ -1,6 +1,6 @@
 @php
-    $w = 525 * $scale;
-    $h = 300 * $scale;
+    $w = 540 * $scale;
+    $h = 280 * $scale;
     $typeName = strtoupper($volunteer->pivot->volunteerType->name ?? '');
     $squadName = $volunteer->pivot->squad->name ?? '';
     $masjidName = $volunteer->pivot->masjid->name ?? '';
