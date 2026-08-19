@@ -196,12 +196,17 @@ class EventController extends Controller
     public function badges(Request $request, Event $event): HttpResponse
     {
         $volunteerIds = array_filter(array_map('intval', $request->input('volunteer_ids', [])));
+        $squadId = $request->integer('squad_id') ?: null;
 
-        $event->load(['purpose:id,name', 'volunteers' => function ($query) use ($volunteerIds) {
+        $event->load(['purpose:id,name', 'volunteers' => function ($query) use ($volunteerIds, $squadId) {
             $query->orderBy('name');
 
             if (! empty($volunteerIds)) {
                 $query->whereIn('volunteers.id', $volunteerIds);
+            }
+
+            if ($squadId) {
+                $query->wherePivot('squad_id', $squadId);
             }
         }]);
 

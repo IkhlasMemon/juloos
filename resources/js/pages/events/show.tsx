@@ -20,8 +20,11 @@ import {
     type VolunteerType,
 } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Eye, IdCard, LoaderCircle, Plus, UserX } from 'lucide-react';
-import { FormEventHandler, useState } from 'react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Eye, IdCard, LoaderCircle, Plus, UserX } from 'lucide-react';
+import { FormEventHandler, useMemo, useState } from 'react';
+
+type SortField = 'name' | 'squad' | 'masjid' | 'type' | 'attendance' | 'registered_at';
+type SortDirection = 'asc' | 'desc';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
     upcoming: 'default',
@@ -94,6 +97,47 @@ export default function EventShow({
         );
     };
 
+    const [sortField, setSortField] = useState<SortField>('registered_at');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+    const handleSort = (field: SortField) => {
+        if (field === sortField) {
+            setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDirection(field === 'registered_at' ? 'desc' : 'asc');
+        }
+    };
+
+    const sortedVolunteers = useMemo(() => {
+        const list = [...(event.volunteers ?? [])];
+        list.sort((a, b) => {
+            let comparison = 0;
+            switch (sortField) {
+                case 'name':
+                    comparison = a.name.localeCompare(b.name);
+                    break;
+                case 'squad':
+                    comparison = (a.pivot.squad?.name ?? '').localeCompare(b.pivot.squad?.name ?? '');
+                    break;
+                case 'masjid':
+                    comparison = (a.pivot.masjid?.name ?? '').localeCompare(b.pivot.masjid?.name ?? '');
+                    break;
+                case 'type':
+                    comparison = (a.pivot.volunteer_type?.name ?? '').localeCompare(b.pivot.volunteer_type?.name ?? '');
+                    break;
+                case 'attendance':
+                    comparison = a.pivot.attendance_status.localeCompare(b.pivot.attendance_status);
+                    break;
+                case 'registered_at':
+                    comparison = new Date(a.pivot.registered_at).getTime() - new Date(b.pivot.registered_at).getTime();
+                    break;
+            }
+            return sortDirection === 'asc' ? comparison : -comparison;
+        });
+        return list;
+    }, [event.volunteers, sortField, sortDirection]);
+
     const registeredIds = event.volunteers?.map((volunteer) => volunteer.id) ?? [];
     const allSelected = registeredIds.length > 0 && registeredIds.every((id) => selectedVolunteerIds.includes(id));
 
@@ -101,10 +145,21 @@ export default function EventShow({
         setSelectedVolunteerIds(allSelected ? [] : registeredIds);
     };
 
+    const [badgeSquadId, setBadgeSquadId] = useState('all');
+
     const badgesHref =
         selectedVolunteerIds.length > 0
             ? route('events.badges', { event: event.id, volunteer_ids: selectedVolunteerIds })
-            : route('events.badges', event.id);
+            : badgeSquadId !== 'all'
+              ? route('events.badges', { event: event.id, squad_id: badgeSquadId })
+              : route('events.badges', event.id);
+
+    const badgesLabel =
+        selectedVolunteerIds.length > 0
+            ? `View Selected Badges (${selectedVolunteerIds.length})`
+            : badgeSquadId !== 'all'
+              ? `View ${squads.find((squad) => String(squad.id) === badgeSquadId)?.name ?? 'Squad'} Badges`
+              : 'View All Badges';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -145,14 +200,29 @@ export default function EventShow({
                     <h2 className="text-lg font-semibold">Volunteer Roster</h2>
                     <div className="flex items-center gap-2">
                         {event.volunteers && event.volunteers.length > 0 && (
-                            <Button size="sm" variant="outline" asChild>
-                                <a href={badgesHref} target="_blank" rel="noopener noreferrer">
-                                    <Eye className="h-4 w-4" />
-                                    {selectedVolunteerIds.length > 0
-                                        ? `View Selected Badges (${selectedVolunteerIds.length})`
-                                        : 'View All Badges'}
-                                </a>
-                            </Button>
+                            <>
+                                {selectedVolunteerIds.length === 0 && (
+                                    <Select value={badgeSquadId} onValueChange={setBadgeSquadId}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="All squads" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All squads</SelectItem>
+                                            {squads.map((squad) => (
+                                                <SelectItem key={squad.id} value={String(squad.id)}>
+                                                    {squad.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                                <Button size="sm" variant="outline" asChild>
+                                    <a href={badgesHref} target="_blank" rel="noopener noreferrer">
+                                        <Eye className="h-4 w-4" />
+                                        {badgesLabel}
+                                    </a>
+                                </Button>
+                            </>
                         )}
                         <Dialog
                             open={registerOpen}
@@ -301,11 +371,17 @@ export default function EventShow({
                                         disabled={registeredIds.length === 0}
                                     />
                                 </TableHead>
-                                <TableHead>Volunteer</TableHead>
-                                <TableHead>Squad</TableHead>
-                                <TableHead>Masjid</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Attendance</TableHead>
+                                <SortableHeader label="Volunteer" field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+                                <SortableHeader label="Squad" field="squad" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+                                <SortableHeader label="Masjid" field="masjid" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+                                <SortableHeader label="Type" field="type" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+                                <SortableHeader
+                                    label="Attendance"
+                                    field="attendance"
+                                    sortField={sortField}
+                                    sortDirection={sortDirection}
+                                    onSort={handleSort}
+                                />
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -317,7 +393,7 @@ export default function EventShow({
                                     </TableCell>
                                 </TableRow>
                             )}
-                            {event.volunteers?.map((volunteer) => (
+                            {sortedVolunteers.map((volunteer) => (
                                 <RosterRow
                                     key={volunteer.id}
                                     eventId={event.id}
@@ -335,6 +411,42 @@ export default function EventShow({
                 </div>
             </div>
         </AppLayout>
+    );
+}
+
+function SortableHeader({
+    label,
+    field,
+    sortField,
+    sortDirection,
+    onSort,
+}: {
+    label: string;
+    field: SortField;
+    sortField: SortField;
+    sortDirection: SortDirection;
+    onSort: (field: SortField) => void;
+}) {
+    const active = sortField === field;
+    return (
+        <TableHead>
+            <button
+                type="button"
+                onClick={() => onSort(field)}
+                className="flex items-center gap-1 hover:text-foreground"
+            >
+                {label}
+                {active ? (
+                    sortDirection === 'asc' ? (
+                        <ArrowUp className="h-3.5 w-3.5" />
+                    ) : (
+                        <ArrowDown className="h-3.5 w-3.5" />
+                    )
+                ) : (
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />
+                )}
+            </button>
+        </TableHead>
     );
 }
 
